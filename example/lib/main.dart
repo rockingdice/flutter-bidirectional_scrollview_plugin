@@ -11,13 +11,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  BidirectionalScrollViewPlugin _plugin;
+  BidirectionalScrollView _plugin;
 
 
   @override
   void initState() {
     super.initState();
-    _plugin = new BidirectionalScrollViewPlugin(
+    _plugin = new BidirectionalScrollView(
       child: _buildWidgets(),
       velocityFactor: 2.0,
       scrollListener: (offset) {

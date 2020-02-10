@@ -2,85 +2,87 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class BidirectionalScrollViewPlugin extends StatefulWidget {
-  BidirectionalScrollViewPlugin({@required this.child,
+class BidirectionalScrollViewController {
+  _BidirectionalScrollViewState _state;
+  ValueChanged<Offset> scrollListener;
+
+  void jumpTo(Offset offset) {
+    _state.offset = offset;
+  }
+}
+
+class BidirectionalScrollView extends StatefulWidget {
+  BidirectionalScrollView({
+    @required this.child,
     this.childWidth,
     this.childHeight,
     this.velocityFactor,
-    this.initialOffset,
     this.scrollDirection,
-    this.scrollListener,
+//    this.scrollListener,
     this.scrollOverflow = Overflow.visible,
+    this.controller,
+    this.contentOffset,
+    this.initOffset,
   });
 
   final Widget child;
   final double childWidth;
   final double childHeight;
   final double velocityFactor;
-  final Offset initialOffset;
+  final Offset contentOffset;
+  final Offset initOffset;
   final ScrollDirection scrollDirection;
-  final ValueChanged<Offset> scrollListener;
-  final Overflow scrollOverflow;
 
-  _BidirectionalScrollViewState _state;
+//  final ValueChanged<Offset> scrollListener;
+  final BidirectionalScrollViewController controller;
+  final Overflow scrollOverflow;
 
   @override
   State<StatefulWidget> createState() {
-    if (_state == null) {
-      _state = new _BidirectionalScrollViewState(
-          child,
-          childWidth,
-          childHeight,
-          velocityFactor,
-          initialOffset,
-          scrollDirection,
-          scrollListener);
-    }
-    return _state;
+    return new _BidirectionalScrollViewState();
   }
-
-  set initialOffset(Offset offset) {
-    _state.initOffset = offset;
-  }
-
-  // set x and y scroll offset of the overflowed widget
-  set offset(Offset offset) {
-    _state.offset = offset;
-  }
-
-  // x scroll offset of the overflowed widget
-  double get x {
-    return _state.x;
-  }
-
-  // x scroll offset of the overflowed widget
-  double get y {
-    return _state.y;
-  }
-
-  // height of the overflowed widget
-  double get height {
-    return _state.height;
-  }
-
-  // width of the overflowed widget
-  double get width {
-    return _state.width;
-  }
-
-  // height of the container that holds the overflowed widget
-  double get containerHeight {
-    return _state.containerHeight;
-  }
-
-  // width of the container that holds the overflowed widget
-  double get containerWidth {
-    return _state.containerWidth;
-  }
+//
+//  set initialOffset(Offset offset) {
+//    _state.initOffset = offset;
+//  }
+//
+//  // set x and y scroll offset of the overflowed widget
+//  set offset(Offset offset) {
+//    _state.offset = offset;
+//  }
+//
+//  // x scroll offset of the overflowed widget
+//  double get x {
+//    return _state.x;
+//  }
+//
+//  // x scroll offset of the overflowed widget
+//  double get y {
+//    return _state.y;
+//  }
+//
+//  // height of the overflowed widget
+//  double get height {
+//    return _state.height;
+//  }
+//
+//  // width of the overflowed widget
+//  double get width {
+//    return _state.width;
+//  }
+//
+//  // height of the container that holds the overflowed widget
+//  double get containerHeight {
+//    return _state.containerHeight;
+//  }
+//
+//  // width of the container that holds the overflowed widget
+//  double get containerWidth {
+//    return _state.containerWidth;
+//  }
 }
 
-class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
-    with SingleTickerProviderStateMixin {
+class _BidirectionalScrollViewState extends State<BidirectionalScrollView> with SingleTickerProviderStateMixin {
   final GlobalKey _containerKey = new GlobalKey();
   final GlobalKey _positionedKey = new GlobalKey();
   final GlobalKey _childKey = new GlobalKey();
@@ -103,35 +105,35 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
 
   bool _enableFling = false;
 
-  _BidirectionalScrollViewState(Widget child, double childWidth,
-      double childHeight, double velocityFactor,
-      Offset initialOffset, ScrollDirection scrollDirection,
-      ValueChanged<Offset> scrollListener) {
-    _child = child;
-    _childWidth = childWidth;
-    _childHeight = childHeight;
-    if (velocityFactor != null) {
-      this._velocityFactor = velocityFactor;
-    }
-    if (scrollListener != null) {
-      _scrollListener = scrollListener;
-    }
-    if (scrollDirection != null) {
-      _scrollDirection = scrollDirection;
-    }
-    if (initialOffset != null) {
-      _initialOffset = initialOffset;
-      xViewPos = _initialOffset.dx;
-      yViewPos = _initialOffset.dy;
-    }
-  }
+  _BidirectionalScrollViewState();
 
   @override
   void initState() {
+    _child = widget.child;
+    _childWidth = widget.childWidth;
+    _childHeight = widget.childHeight;
+    if (widget.velocityFactor != null) {
+      this._velocityFactor = widget.velocityFactor;
+    }
+    if (widget.controller != null) {
+      _scrollListener = widget.controller.scrollListener;
+      widget.controller._state = this;
+    }
+    if (widget.scrollDirection != null) {
+      _scrollDirection = widget.scrollDirection;
+    }
+    if (widget.contentOffset != null) {
+      _initialOffset = widget.contentOffset;
+    }
+
+    if (widget.initOffset != null) {
+      xViewPos = widget.initOffset.dx;
+      yViewPos = widget.initOffset.dy;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback(_afterLayout);
     super.initState();
-    _controller = new AnimationController(vsync: this)
-      ..addListener(_handleFlingAnimation);
+    _controller = new AnimationController(vsync: this)..addListener(_handleFlingAnimation);
   }
 
   _afterLayout(_) {
@@ -187,8 +189,7 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
   }
 
   void _handleFlingAnimation() {
-    if (!_enableFling || _flingAnimation.value.dx.isNaN ||
-        _flingAnimation.value.dy.isNaN) {
+    if (!_enableFling || _flingAnimation.value.dx.isNaN || _flingAnimation.value.dy.isNaN) {
       return;
     }
 
@@ -225,7 +226,6 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     RenderBox containerBox = _containerKey.currentContext.findRenderObject();
     double containerWidth = containerBox.size.width;
     double containerHeight = containerBox.size.height;
-
 
     if (newXPosition > _initialOffset.dx || width < containerWidth) {
       newXPosition = _initialOffset.dx;
@@ -270,10 +270,7 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
     yPos = yViewPos;
 
     _enableFling = true;
-    _flingAnimation = new Tween<Offset>(
-        begin: new Offset(0.0, 0.0),
-        end: direction * distance * _velocityFactor
-    ).animate(_controller);
+    _flingAnimation = new Tween<Offset>(begin: new Offset(0.0, 0.0), end: direction * distance * _velocityFactor).animate(_controller);
     _controller
       ..value = 0.0
       ..fling(velocity: velocity);
@@ -306,8 +303,7 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
               child: new Container(
                 key: _childKey,
                 child: _child,
-              )
-          )
+              ))
         ],
       );
     }
@@ -328,26 +324,18 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollViewPlugin>
                 left: xViewPos,
                 width: _childWidth,
                 height: _childHeight,
-                child: new CustomScrollView(
-                    physics: new NeverScrollableScrollPhysics(),
-                    slivers: [
-                      SliverSafeArea(
-                        sliver: SliverFillRemaining(
-                          child: _child,
-                        ),
-                      )
-                    ]
-                ),
+                child: new CustomScrollView(physics: new NeverScrollableScrollPhysics(), slivers: [
+                  SliverSafeArea(
+                    sliver: SliverFillRemaining(
+                      child: _child,
+                    ),
+                  )
+                ]),
               ),
             ],
-          )
-      ),
+          )),
     );
   }
 }
 
-enum ScrollDirection {
-  horizontal,
-  vertical,
-  both
-}
+enum ScrollDirection { horizontal, vertical, both }
