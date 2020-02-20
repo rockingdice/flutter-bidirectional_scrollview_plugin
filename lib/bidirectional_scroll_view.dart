@@ -87,7 +87,6 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollView> with 
   final GlobalKey _positionedKey = new GlobalKey();
   final GlobalKey _childKey = new GlobalKey();
 
-  Widget _child;
   double _childWidth;
   double _childHeight;
   double _velocityFactor = 1.0;
@@ -109,7 +108,6 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollView> with 
 
   @override
   void initState() {
-    _child = widget.child;
     _childWidth = widget.childWidth;
     _childHeight = widget.childHeight;
     if (widget.velocityFactor != null) {
@@ -302,7 +300,7 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollView> with 
               left: 0,
               child: new Container(
                 key: _childKey,
-                child: _child,
+                child: widget.child,
               ))
         ],
       );
@@ -327,7 +325,7 @@ class _BidirectionalScrollViewState extends State<BidirectionalScrollView> with 
                 child: new CustomScrollView(physics: new NeverScrollableScrollPhysics(), slivers: [
                   SliverSafeArea(
                     sliver: SliverFillRemaining(
-                      child: _child,
+                      child: widget.child,
                     ),
                   )
                 ]),
